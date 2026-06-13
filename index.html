@@ -3,799 +3,1117 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Road Dig Madthini — Namma Bengaluru</title>
-<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<title>Namma Bengaluru — The Infinite City</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --cream: #f5f0e8;
-    --dark: #1a1a1a;
-    --red: #c0392b;
-    --ink: #2c2c2c;
-    --faded: #8a7f70;
-    --paper: #ede8dc;
-    --stamp-green: #1a6b3a;
-  }
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #222536;
+  --border: #2e3247;
+  --accent: #e8a838;
+  --accent2: #4ade80;
+  --red: #ef4444;
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --panel-w: 340px;
+}
 
-  body {
-    background: var(--cream);
-    font-family: 'Special Elite', 'Courier New', monospace;
-    color: var(--ink);
-    min-height: 100vh;
-    padding: 0 0 60px;
-  }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-  /* ── SKYLINE SVG ── */
-  .skyline {
-    width: 100%;
-    display: block;
-    background: var(--cream);
-  }
+/* ── HEADER ── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+header h1 {
+  font-family: 'Special Elite', monospace;
+  font-size: 18px;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.header-stats {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  flex: 1;
+  flex-wrap: wrap;
+}
+.stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.stat-chip .label { color: var(--muted); }
+.stat-chip .value { font-weight: 600; color: var(--text); }
+.chaos-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 160px;
+  max-width: 260px;
+}
+.chaos-bar-wrap .label { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.chaos-bar-bg {
+  flex: 1;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.chaos-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #f59e0b, var(--red));
+  border-radius: 4px;
+  transition: width 0.8s ease;
+}
+.chaos-val { font-size: 12px; font-weight: 600; color: var(--accent); min-width: 32px; }
 
-  /* ── HEADER ── */
-  .ministry-header {
-    background: var(--cream);
-    border-bottom: 3px double var(--ink);
-    padding: 18px 24px 14px;
-    text-align: center;
-    position: relative;
-  }
-  .ministry-header .seal {
-    width: 64px; height: 64px;
-    border: 3px solid var(--ink);
-    border-radius: 50%;
-    margin: 0 auto 10px;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    font-size: 9px; line-height: 1.3;
-    text-transform: uppercase; letter-spacing: 0.04em;
-    position: relative;
-  }
-  .seal::before {
-    content: '✦ ✦ ✦';
-    position: absolute; top: 6px;
-    font-size: 7px; letter-spacing: 2px;
-  }
-  .seal::after {
-    content: '✦ ✦ ✦';
-    position: absolute; bottom: 6px;
-    font-size: 7px; letter-spacing: 2px;
-  }
-  .ministry-header h1 {
-    font-size: clamp(18px, 4vw, 26px);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  .ministry-header .sub {
-    font-size: 11px; color: var(--faded);
-    letter-spacing: 0.1em; text-transform: uppercase;
-    margin-top: 4px;
-  }
+/* ── MAIN BODY ── */
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
 
-  /* ── METERS ── */
-  .meters {
-    display: flex; gap: 16px;
-    padding: 14px 24px;
-    border-bottom: 1px solid #c8bfaf;
-    background: var(--paper);
-    flex-wrap: wrap;
-  }
-  .meter {
-    flex: 1; min-width: 160px;
-  }
-  .meter-label {
-    font-size: 11px; text-transform: uppercase;
-    letter-spacing: 0.08em; margin-bottom: 5px;
-    display: flex; justify-content: space-between;
-  }
-  .meter-label .val { font-weight: bold; }
-  .meter-bar-bg {
-    height: 14px; background: #d5ccbc;
-    border: 1px solid #b0a090;
-    position: relative; overflow: hidden;
-  }
-  .meter-bar-fill {
-    height: 100%; width: 0%;
-    transition: width 0.6s ease;
-  }
-  #commission-fill { background: var(--stamp-green); }
-  #anger-fill { background: var(--red); }
-  .meter-bar-bg::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: repeating-linear-gradient(
-      90deg, transparent 0, transparent 9%, rgba(0,0,0,0.08) 9%, rgba(0,0,0,0.08) 10%
-    );
-  }
+/* ── MAP ── */
+#map {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+#map-fallback {
+  display: none;
+  flex: 1;
+  background: #1a2035;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
 
-  /* ── MAIN CARD AREA ── */
-  .card-area {
-    max-width: 680px;
-    margin: 32px auto 0;
-    padding: 0 20px;
-  }
+/* custom marker icons */
+.map-marker {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 3px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 0 0 0 rgba(255,255,255,0.4);
+  transition: transform 0.2s;
+}
+.map-marker:hover { transform: scale(1.15); }
+.map-marker.pulse {
+  animation: markerPulse 0.6s ease 3;
+}
+@keyframes markerPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); }
+  70%  { box-shadow: 0 0 0 14px rgba(239,68,68,0); }
+  100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+}
+.marker-metro   { background: #1e1b4b; border-color: var(--purple); }
+.marker-road    { background: #1c1917; border-color: var(--accent); }
+.marker-flyover { background: #052e16; border-color: var(--accent2); }
+.marker-airport { background: #0c1a2e; border-color: var(--blue); }
 
-  /* ── FILE FOLDER CARD ── */
-  .file-card {
-    background: var(--paper);
-    border: 1px solid #b0a090;
-    box-shadow: 4px 4px 0 #c8bfaf, 8px 8px 0 #d5ccbc;
-    padding: 32px 36px 28px;
-    position: relative;
-    animation: slideIn 0.35s ease;
-  }
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateY(18px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .file-card .folder-tab {
-    position: absolute; top: -28px; left: 0;
-    background: var(--paper);
-    border: 1px solid #b0a090; border-bottom: none;
-    padding: 5px 18px 6px;
-    font-size: 11px; text-transform: uppercase;
-    letter-spacing: 0.08em; color: var(--faded);
-  }
-  .file-card .event-num {
-    font-size: 11px; color: var(--faded);
-    text-transform: uppercase; letter-spacing: 0.1em;
-    margin-bottom: 10px;
-  }
-  .file-card h2 {
-    font-size: clamp(16px, 3.5vw, 22px);
-    margin-bottom: 16px;
-    line-height: 1.3;
-  }
-  .file-card .event-body {
-    font-family: 'Courier Prime', 'Courier New', monospace;
-    font-size: 14px; line-height: 1.7;
-    color: var(--ink);
-    border-top: 1px dashed #b0a090;
-    padding-top: 14px; margin-top: 4px;
-  }
-  .file-card .flavor {
-    font-size: 12px; color: var(--faded);
-    font-style: italic; margin-top: 10px;
-  }
+/* ── RIGHT PANEL ── */
+.panel {
+  width: var(--panel-w);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.panel-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.panel-section-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
 
-  /* ── CHOICES ── */
-  .choices {
-    margin-top: 28px;
-    display: flex; flex-direction: column; gap: 10px;
-  }
-  .choice-btn {
-    background: var(--cream);
-    border: 1px solid #b0a090;
-    padding: 12px 16px;
-    font-family: 'Special Elite', monospace;
-    font-size: 13px;
-    text-align: left;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-    line-height: 1.4;
-    color: var(--ink);
-  }
-  .choice-btn:hover {
-    background: var(--dark);
-    color: var(--cream);
-    transform: translateX(4px);
-  }
-  .choice-btn .choice-label {
-    font-size: 10px; text-transform: uppercase;
-    letter-spacing: 0.08em; color: var(--faded);
-    display: block; margin-bottom: 3px;
-  }
-  .choice-btn:hover .choice-label { color: #aaa; }
+/* project rows */
+.project-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 6px;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+.project-row:hover { background: var(--surface2); }
+.project-row.active { background: var(--surface2); border-color: var(--border); }
+.project-icon { font-size: 18px; flex-shrink: 0; width: 24px; text-align: center; }
+.project-info { flex: 1; min-width: 0; }
+.project-name { font-size: 13px; font-weight: 500; }
+.project-status { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.proj-bar-bg {
+  height: 5px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 5px;
+}
+.proj-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s ease;
+}
+.proj-pct { font-size: 11px; color: var(--muted); min-width: 30px; text-align: right; }
 
-  /* ── REACTION TOAST ── */
-  .reaction-toast {
-    display: none;
-    background: var(--ink);
-    color: var(--cream);
-    padding: 14px 20px;
-    font-family: 'Courier Prime', monospace;
-    font-size: 13px; line-height: 1.5;
-    margin-top: 20px;
-    border-left: 4px solid var(--red);
-    animation: fadeIn 0.3s ease;
-  }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  .reaction-toast.show { display: block; }
-  .next-btn {
-    margin-top: 14px;
-    background: var(--dark);
-    color: var(--cream);
-    border: none;
-    padding: 10px 24px;
-    font-family: 'Special Elite', monospace;
-    font-size: 13px;
-    cursor: pointer;
-    letter-spacing: 0.06em;
-  }
-  .next-btn:hover { background: var(--red); }
+/* action section */
+.actions-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+}
+.action-section-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 10px;
+  margin-top: 6px;
+}
+.action-btn {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 12px;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.15s, border-color 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.action-btn:hover:not(:disabled) {
+  background: #2a2d40;
+  border-color: #4a5070;
+}
+.action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.action-btn .btn-icon { font-size: 14px; flex-shrink: 0; }
+.action-btn .btn-text { flex: 1; }
+.action-btn .btn-tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+.tag-civic { background: #1e3a2e; color: var(--accent2); }
+.tag-chaos { background: #3a1e1e; color: #fca5a5; }
+.cooldown-bar {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 3px;
+  background: var(--accent);
+  transition: width linear;
+}
 
-  /* ── STAMPS ── */
-  .stamp {
-    display: inline-block;
-    border: 3px solid;
-    padding: 4px 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    font-size: 12px;
-    font-weight: bold;
-    transform: rotate(-4deg);
-    opacity: 0.85;
-    margin-left: 8px;
-    vertical-align: middle;
-  }
-  .stamp-red { border-color: var(--red); color: var(--red); }
-  .stamp-green { border-color: var(--stamp-green); color: var(--stamp-green); }
+/* ── TOAST ── */
+.toast {
+  position: absolute;
+  bottom: 56px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  padding: 12px 16px;
+  border-radius: 6px;
+  max-width: 420px;
+  width: calc(100% - 380px);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text);
+  z-index: 1000;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
 
-  /* ── INTRO SCREEN ── */
-  .intro-screen .letterhead {
-    text-align: center;
-    border-bottom: 2px solid var(--ink);
-    padding-bottom: 14px; margin-bottom: 18px;
-  }
-  .intro-screen .letterhead .dept {
-    font-size: 11px; text-transform: uppercase;
-    letter-spacing: 0.12em; color: var(--faded);
-  }
-  .intro-screen .letterhead .doc-title {
-    font-size: 20px; margin: 8px 0 4px;
-  }
-  .intro-screen .letter-body {
-    font-family: 'Courier Prime', 'Courier New', monospace;
-    font-size: 13px; line-height: 1.8;
-  }
-  .intro-screen .letter-body p { margin-bottom: 12px; }
-  .intro-screen .letter-body .ref {
-    font-size: 11px; color: var(--faded);
-  }
-  .start-btn {
-    margin-top: 24px;
-    background: var(--dark); color: var(--cream);
-    border: none; padding: 14px 32px;
-    font-family: 'Special Elite', monospace;
-    font-size: 15px; cursor: pointer;
-    letter-spacing: 0.08em;
-    display: block; width: 100%;
-  }
-  .start-btn:hover { background: var(--red); }
+/* ── EVENT MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.modal-overlay.show {
+  opacity: 1;
+  pointer-events: all;
+}
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--red);
+  padding: 28px;
+  border-radius: 8px;
+  max-width: 480px;
+  width: calc(100% - 48px);
+  transform: translateY(-20px);
+  transition: transform 0.3s;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+}
+.modal-overlay.show .modal { transform: translateY(0); }
+.modal-tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--red);
+  margin-bottom: 8px;
+}
+.modal h2 {
+  font-family: 'Special Elite', monospace;
+  font-size: 20px;
+  color: var(--accent);
+  margin-bottom: 14px;
+  line-height: 1.3;
+}
+.modal-body {
+  font-size: 13px;
+  line-height: 1.8;
+  color: #cbd5e1;
+  margin-bottom: 20px;
+}
+.modal-impact {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--red);
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+.modal-btns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.modal-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 9px 14px;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  transition: background 0.15s;
+}
+.modal-btn:hover { background: #2a2d40; }
+.modal-btn.primary {
+  background: #2d1e00;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.modal-btn.primary:hover { background: #3d2a00; }
 
-  /* ── OUTCOME SCREEN ── */
-  .outcome-screen {
-    text-align: center;
-  }
-  .outcome-screen .cert-title {
-    font-size: 11px; text-transform: uppercase;
-    letter-spacing: 0.15em; color: var(--faded);
-    margin-bottom: 8px;
-  }
-  .outcome-screen h2 {
-    font-size: clamp(20px, 5vw, 30px);
-    margin-bottom: 20px; line-height: 1.2;
-  }
-  .outcome-screen .cert-border {
-    border: 2px solid var(--ink);
-    padding: 24px 20px;
-    margin: 16px 0;
-    position: relative;
-  }
-  .outcome-screen .cert-border::before,
-  .outcome-screen .cert-border::after {
-    content: '✦';
-    position: absolute;
-    font-size: 16px;
-  }
-  .outcome-screen .cert-border::before { top: -10px; left: 50%; transform: translateX(-50%); background: var(--paper); padding: 0 8px; }
-  .outcome-screen .cert-border::after { bottom: -10px; left: 50%; transform: translateX(-50%); background: var(--paper); padding: 0 8px; }
+/* ── NEWS TICKER ── */
+.ticker {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 8px 16px;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ticker-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-weight: 600;
+}
+.ticker-track {
+  overflow: hidden;
+  flex: 1;
+}
+.ticker-inner {
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--muted);
+  animation: tickerScroll 40s linear infinite;
+}
+@keyframes tickerScroll {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(-100%); }
+}
 
-  .stat-row {
-    display: flex; justify-content: space-between;
-    font-family: 'Courier Prime', monospace;
-    font-size: 14px; padding: 7px 0;
-    border-bottom: 1px dashed #c8bfaf;
-  }
-  .stat-row:last-child { border-bottom: none; }
-  .stat-label { color: var(--faded); }
-  .stat-val { font-weight: bold; }
+/* ── GAME OVER ── */
+.gameover-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
+.gameover-overlay.show { opacity: 1; pointer-events: all; }
+.gameover-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--red);
+  padding: 36px;
+  border-radius: 8px;
+  max-width: 480px;
+  width: calc(100% - 48px);
+  text-align: center;
+}
+.gameover-card h2 {
+  font-family: 'Special Elite', monospace;
+  font-size: 26px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.gameover-card .sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+.gameover-stats {
+  background: var(--surface2);
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+.go-stat {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+.go-stat:last-child { border-bottom: none; }
+.go-stat .go-label { color: var(--muted); }
+.go-stat .go-val { font-weight: 600; }
+.gameover-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.go-btn {
+  padding: 10px 22px;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.go-btn.primary {
+  background: var(--accent);
+  border: none;
+  color: #000;
+}
+.go-btn.secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
 
-  .rating-box {
-    margin: 20px 0 10px;
-    font-size: clamp(22px, 5vw, 32px);
-  }
-  .rating-sub {
-    font-family: 'Courier Prime', monospace;
-    font-size: 13px; color: var(--faded);
-    margin-bottom: 24px;
-  }
-  .big-stamp {
-    border: 4px solid var(--stamp-green);
-    color: var(--stamp-green);
-    display: inline-block;
-    padding: 8px 20px;
-    font-size: 22px;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    transform: rotate(-5deg);
-    margin: 10px 0 24px;
-    opacity: 0.9;
-  }
-  .share-btn {
-    background: var(--ink); color: var(--cream);
-    border: none; padding: 12px 28px;
-    font-family: 'Special Elite', monospace;
-    font-size: 14px; cursor: pointer;
-    letter-spacing: 0.06em; margin: 6px;
-  }
-  .share-btn:hover { background: var(--red); }
-  .replay-btn {
-    background: transparent; color: var(--ink);
-    border: 1px solid var(--ink);
-    padding: 12px 28px;
-    font-family: 'Special Elite', monospace;
-    font-size: 14px; cursor: pointer;
-    letter-spacing: 0.06em; margin: 6px;
-  }
-  .replay-btn:hover { background: var(--ink); color: var(--cream); }
+/* ── SCROLLBAR ── */
+.actions-scroll::-webkit-scrollbar { width: 4px; }
+.actions-scroll::-webkit-scrollbar-track { background: transparent; }
+.actions-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-  /* ── PROGRESS DOTS ── */
-  .progress-dots {
-    display: flex; gap: 6px; justify-content: center;
-    margin: 20px 0 0;
-  }
-  .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    border: 1px solid #b0a090;
-    background: transparent;
-    transition: background 0.3s;
-  }
-  .dot.done { background: var(--ink); }
-  .dot.active { background: var(--red); border-color: var(--red); }
+/* ── MOBILE ── */
+@media (max-width: 640px) {
+  .main { flex-direction: column; }
+  #map { min-height: 55vh; }
+  .panel { width: 100%; border-left: none; border-top: 1px solid var(--border); max-height: 45vh; }
+  .toast { width: calc(100% - 32px); bottom: 48px; }
+  header h1 { font-size: 15px; }
+  .chaos-bar-wrap { min-width: 120px; }
+}
 </style>
 </head>
 <body>
 
-<!-- BANGALORE SKYLINE SVG -->
-<svg class="skyline" viewBox="0 0 800 90" xmlns="http://www.w3.org/2000/svg">
-  <rect width="800" height="90" fill="#f5f0e8"/>
-  <!-- buildings -->
-  <rect x="10" y="55" width="30" height="35" fill="none" stroke="#c8bfaf" stroke-width="1.5"/>
-  <rect x="45" y="40" width="22" height="50" fill="none" stroke="#c8bfaf" stroke-width="1.5"/>
-  <rect x="72" y="60" width="18" height="30" fill="none" stroke="#c8bfaf" stroke-width="1.5"/>
-  <rect x="95" y="45" width="26" height="45" fill="none" stroke="#c8bfaf" stroke-width="1.5"/>
-  <!-- Vidhana Soudha dome (centre) -->
-  <rect x="340" y="50" width="120" height="40" fill="none" stroke="#b0a090" stroke-width="1.5"/>
-  <rect x="355" y="38" width="90" height="15" fill="none" stroke="#b0a090" stroke-width="1.5"/>
-  <rect x="370" y="28" width="60" height="12" fill="none" stroke="#b0a090" stroke-width="1.5"/>
-  <ellipse cx="400" cy="28" rx="18" ry="10" fill="none" stroke="#b0a090" stroke-width="1.5"/>
-  <line x1="400" y1="18" x2="400" y2="10" stroke="#b0a090" stroke-width="1.5"/>
-  <!-- more buildings -->
-  <rect x="480" y="42" width="28" height="48" fill="none" stroke="#c8bfaf" stroke-width="1.5"/>
-  <rect x="513" y="55" width="20" height="35" fill="none" stroke="#c8bfaf" stroke-width="1.5"/>
-  <rect x="538" y="35" width="35" height="55" fill="none" stroke="#c8bfaf" stroke-width="1.5"/>
-  <rect x="578" y="50" width="22" height="40" fill="none" stroke="#c8bfaf" stroke-width="1.5"/>
-  <rect x="605" y="62" width="16" height="28" fill="none" stroke="#c8bfaf" stroke-width="1.5"/>
-  <rect x="626" y="44" width="30" height="46" fill="none" stroke="#c8bfaf" stroke-width="1.5"/>
-  <rect x="660" y="58" width="18" height="32" fill="none" stroke="#c8bfaf" stroke-width="1.5"/>
-  <rect x="684" y="48" width="25" height="42" fill="none" stroke="#c8bfaf" stroke-width="1.5"/>
-  <rect x="714" y="62" width="20" height="28" fill="none" stroke="#c8bfaf" stroke-width="1.5"/>
-  <rect x="740" y="50" width="22" height="40" fill="none" stroke="#c8bfaf" stroke-width="1.5"/>
-  <rect x="767" y="55" width="28" height="35" fill="none" stroke="#c8bfaf" stroke-width="1.5"/>
-  <!-- ground line -->
-  <line x1="0" y1="90" x2="800" y2="90" stroke="#b0a090" stroke-width="2"/>
-  <!-- construction crane (satirical) -->
-  <line x1="180" y1="90" x2="180" y2="20" stroke="#c8bfaf" stroke-width="2"/>
-  <line x1="180" y1="22" x2="230" y2="22" stroke="#c8bfaf" stroke-width="2"/>
-  <line x1="230" y1="22" x2="230" y2="38" stroke="#c8bfaf" stroke-width="1.5" stroke-dasharray="3,3"/>
-  <!-- road dig indicators -->
-  <rect x="250" y="80" width="60" height="10" fill="#d5ccbc" stroke="#b0a090" stroke-width="1"/>
-  <text x="253" y="89" font-size="7" fill="#8a7f70" font-family="monospace">⚠ DIG IN PROGRESS</text>
-</svg>
-
-<!-- MINISTRY HEADER -->
-<div class="ministry-header">
-  <div class="seal">
-    <span style="font-size:18px">🏛️</span>
-  </div>
-  <h1>Ministry of Roads &amp; Unnecessary Excavation</h1>
-  <div class="sub">Bruhat Bengaluru Mahanagara Palike &nbsp;|&nbsp; Est. "Since Always"</div>
-</div>
-
-<!-- METERS -->
-<div class="meters">
-  <div class="meter">
-    <div class="meter-label">
-      <span>₹ Your Commission</span>
-      <span class="val" id="commission-val">0 cr</span>
+<!-- HEADER -->
+<header>
+  <h1>🏙️ Namma Bengaluru</h1>
+  <div class="header-stats">
+    <div class="stat-chip">
+      <span class="label">Year</span>
+      <span class="value" id="year-val">2020</span>
     </div>
-    <div class="meter-bar-bg">
-      <div class="meter-bar-fill" id="commission-fill"></div>
+    <div class="stat-chip">
+      <span class="label">Months wasted</span>
+      <span class="value" id="months-val">0</span>
+    </div>
+    <div class="chaos-bar-wrap">
+      <span class="label">Chaos</span>
+      <div class="chaos-bar-bg"><div class="chaos-bar-fill" id="chaos-fill"></div></div>
+      <span class="chaos-val" id="chaos-val">0%</span>
     </div>
   </div>
-  <div class="meter">
-    <div class="meter-label">
-      <span>Public Anger</span>
-      <span class="val" id="anger-val">0%</span>
+</header>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- MAP -->
+  <div id="map"></div>
+  <div id="map-fallback">
+    <div style="font-size:48px">🗺️</div>
+    <div>Map tiles unavailable — playing in offline mode</div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel">
+    <!-- Projects -->
+    <div class="panel-section">
+      <div class="panel-section-title">Infrastructure Projects</div>
+      <div id="project-list"></div>
     </div>
-    <div class="meter-bar-bg">
-      <div class="meter-bar-fill" id="anger-fill"></div>
+
+    <!-- Actions -->
+    <div class="actions-scroll" id="actions-area">
+      <div class="action-section-title">Civic Actions</div>
+      <div id="civic-actions"></div>
+      <div class="action-section-title" style="margin-top:14px">Desperate Measures</div>
+      <div id="chaos-actions"></div>
     </div>
   </div>
 </div>
 
-<!-- PROGRESS DOTS -->
-<div class="progress-dots" id="progress-dots"></div>
+<!-- NEWS TICKER -->
+<div class="ticker">
+  <span class="ticker-label">📰 Breaking</span>
+  <div class="ticker-track">
+    <div class="ticker-inner" id="ticker-text"></div>
+  </div>
+</div>
 
-<!-- MAIN CARD AREA -->
-<div class="card-area" id="card-area"></div>
+<!-- ACTION OUTCOME TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- EVENT MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-tag" id="modal-tag">⚠ BREAKING EVENT</div>
+    <h2 id="modal-title"></h2>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-impact" id="modal-impact"></div>
+    <div class="modal-btns" id="modal-btns"></div>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div class="gameover-overlay" id="gameover-overlay">
+  <div class="gameover-card">
+    <div style="font-size:48px;margin-bottom:12px">🏚️</div>
+    <h2>Peak Chaos Achieved</h2>
+    <div class="sub">Bengaluru has transcended infrastructure.<br>This is now just how it is. Good job, citizen.</div>
+    <div class="gameover-stats" id="gameover-stats"></div>
+    <div class="gameover-btns">
+      <button class="go-btn primary" onclick="copyShareCard()">📋 Copy Share Card</button>
+      <button class="go-btn secondary" onclick="restartGame()">🔄 Try Again</button>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:16px;">Phase 2 is already approved. Dig begins Monday.</p>
+  </div>
+</div>
 
 <script>
-// ── GAME STATE ──
-let state = {
-  commission: 0,   // 0–100
-  anger: 0,        // 0–100
-  eventIndex: -1,  // -1 = intro
-  awaitingNext: false,
+// ── DATA ──
+
+const PROJECTS = {
+  metro: {
+    name: 'Namma Metro', icon: '🚇',
+    color: '#a78bfa', colorVar: 'var(--purple)',
+    status: 'Under Tender',
+    lat: 12.9766, lng: 77.5713,
+    progress: 5,
+  },
+  road: {
+    name: 'Silk Board Road', icon: '🚧',
+    color: '#e8a838', colorVar: 'var(--accent)',
+    status: 'Perpetually Dug',
+    lat: 12.9170, lng: 77.6230,
+    progress: 12,
+  },
+  flyover: {
+    name: 'Hebbal Flyover', icon: '🌉',
+    color: '#4ade80', colorVar: 'var(--accent2)',
+    status: 'Land Acquired',
+    lat: 13.0450, lng: 77.5960,
+    progress: 2,
+  },
+  airport: {
+    name: 'Airport Expansion', icon: '✈️',
+    color: '#60a5fa', colorVar: 'var(--blue)',
+    status: 'Proposed',
+    lat: 13.1986, lng: 77.7066,
+    progress: 0,
+  },
 };
 
-// ── EVENTS DATA ──
-const EVENTS = [
+const CIVIC_ACTIONS = [
   {
-    tab: "File No. 1 / Tender",
-    title: "Tender Time",
-    body: `The MG Road project has been approved by the committee. Budget: ₹47 crore. Timeline: 3 months.\n\nNow, who gets the contract?`,
-    flavor: `(The file has been sitting on your desk for 14 months. Nobody noticed.)`,
-    choices: [
-      {
-        label: "Award to your brother-in-law's firm, 'Sri Excavation Pvt Ltd'",
-        commission: 28, anger: 10,
-        reaction: `Done. Sri Excavation Pvt Ltd has exactly 2 employees and a JCB purchased on EMI. They've already subcontracted the work to someone else for half the amount. Classic.\n\n📰 Deccan Herald: "Tender awarded in record time. No transparency report available."`
-      },
-      {
-        label: "Open tender — let the best firm win",
-        commission: 4, anger: 3,
-        reaction: `Admirable. Completely useless. The tender process will take 18 months. The lowest bidder will quote ₹12 crore, disappear after collecting advance, and reappear as a different company next year.\n\n😐 Nothing happens. This is Bangalore.`
-      },
-      {
-        label: "Award to your brother-in-law's firm, but rename it to 'BengaluruInfra Solutions'",
-        commission: 28, anger: 4,
-        reaction: `Brilliant move, Minister. The firm was renamed on Thursday. Contract awarded on Friday. Investigation started on Saturday — but the investigating officer was transferred on Sunday.\n\n✅ No questions asked. Commission secured.`
-      },
-    ]
+    id: 'rti', icon: '📋', label: 'File RTI', tag: 'civic',
+    progress: 3, chaos: 0, cooldown: 30,
+    result: 'RTI filed. Response due in 30 days. Acknowledged in 90 days. Final reply: "The file is unavailable at this time."',
   },
   {
-    tab: "File No. 2 / Public",
-    title: "Citizens Complain",
-    body: `Residents of Indiranagar have submitted a petition. They want to know: why is MG Road being dug? It was resurfaced just 3 years ago.\n\nYour press secretary is waiting for instructions.`,
-    flavor: `The petition has 4,200 signatures and a very angry cover letter in Kannada.`,
-    choices: [
-      {
-        label: "Blame the previous government",
-        commission: 0, anger: 6,
-        reaction: `"The Congress government of 1994 laid substandard pipes. We are rectifying their mistakes. This is a gift to the people of Bengaluru."\n\nThe press conference lasted 45 minutes. Nobody asked a follow-up question. It worked.`
-      },
-      {
-        label: "Say it's for a 'Smart City Project'",
-        commission: 0, anger: 4,
-        reaction: `PRESS RELEASE: "MG Road will be part of Bengaluru's ₹2,100 crore Smart City corridor, featuring IoT-enabled potholes and AI-powered traffic signals."\n\nA startup from Koramangala tweeted their support. TiE Bangalore invited you to speak.`
-      },
-      {
-        label: "Ignore. Block their Twitter replies.",
-        commission: 0, anger: 14,
-        reaction: `400 new Twitter accounts created in Indiranagar. One resident's thread went viral.\n\nBut you've seen this before. In 72 hours, there will be a new controversy somewhere else. Patience, Minister.\n\n🐦 Trending: #DigBangaloreDigDeeper`
-      },
-    ]
+    id: 'protest', icon: '✊', label: 'Organise Protest', tag: 'civic',
+    progress: 4, chaos: 5, cooldown: 45,
+    result: '500 citizens gathered at Town Hall. CM "acknowledged" the concerns. Nothing changed. Protest selfies went viral, though.',
   },
   {
-    tab: "File No. 3 / Media",
-    title: "Breaking News",
-    body: `A journalist from The Hindu has filed 3 RTI requests about the tender process. She is outside your office and would like to speak with you.\n\nYour PA says she has a notebook AND a camera.`,
-    flavor: `(She also has 80,000 Twitter followers. Noted.)`,
-    choices: [
-      {
-        label: "Invite her for tea and a 'site visit' — then a nice lunch",
-        commission: -6, anger: -5,
-        reaction: `Excellent. Post-lunch, the article became: "Minister personally inspects MG Road project, commits to transparency."\n\nThe RTI responses will be delayed by 90 days citing "sensitive government information." Standard procedure.\n\n☕ Relationship: Built.`
-      },
-      {
-        label: "Transfer the journalist to the Gulbarga agriculture beat",
-        commission: 0, anger: 18,
-        reaction: `You don't have authority over journalists. But you called her editor.\n\nShe's still at Bengaluru bureau. Her article is now longer. She's added a section on "intimidation of press."\n\n📺 NDTV picked it up. This was a mistake, Minister.`
-      },
-      {
-        label: "Hold a press conference: 'This project creates 600 local jobs'",
-        commission: 0, anger: 2,
-        reaction: `The 600 jobs include: 2 JCB operators, 1 site supervisor, 597 "support staff" who will never be traceable.\n\nPrint media ran the headline as given. The journalist published anyway. But it's buried on page 8.\n\n📄 Page 8 is fine.`
-      },
-    ]
+    id: 'meeting', icon: '🪑', label: 'Attend Public Meeting', tag: 'civic',
+    progress: 2, chaos: 0, cooldown: 20,
+    result: 'You attended the BBMP meeting. 3 officials were present. 1 was on the phone. 1 was asleep. The third offered you tea.',
   },
   {
-    tab: "File No. 4 / Monsoon",
-    title: "Monsoon Has Entered the Chat",
-    body: `It is June. The dug-up MG Road has filled with rainwater. Two motorbikes have sunk. The BBMP work crew has not been seen since May 31st.\n\nA photo of a man rowing a boat on MG Road is trending.`,
-    flavor: `"Yaake madthira? Commission beku!" — Overheard at BBMP office`,
-    choices: [
-      {
-        label: "Blame climate change and 'unprecedented rainfall'",
-        commission: 0, anger: 8,
-        reaction: `"Bengaluru received 340% excess rainfall this June," your statement reads.\n\nIMD data shows it rained normally. But nobody checked IMD.\n\n🌧️ Statement accepted by 60% of news channels. Good enough.`
-      },
-      {
-        label: "Blame non-Bangaloreans for 'overloading the drainage system'",
-        commission: 0, anger: 22,
-        reaction: `This was a mistake. Kannadigas AND non-Kannadigas are both angry.\n\n"Outsiders came to our city and brought their rain with them?" – Viral meme.\n\n💀 Twitter ratio: 1 like, 4,000 quote tweets. Rough day.`
-      },
-      {
-        label: "Organise a boat photo op — 'Minister surveys flood situation'",
-        commission: 0, anger: -6,
-        reaction: `Genius. Pure genius.\n\nYou sat in a boat on MG Road wearing a white kurta and a very concerned expression. The photos went everywhere.\n\n📸 Headlines: "Minister wades into crisis, takes personal stock." Public anger briefly replaced by bewilderment. A net positive.`
-      },
-    ]
-  },
-  {
-    tab: "File No. 5 / G20",
-    title: "G20 Summit Alert",
-    body: `The Ministry of External Affairs has informed you that a foreign delegation will drive past MG Road on Thursday.\n\nThe road is currently a 400-metre open trench filled with mud, cable wire, and one abandoned cement mixer.`,
-    flavor: `The delegation includes the infrastructure minister of Germany. He has a blog.`,
-    choices: [
-      {
-        label: "Fill the trench with mud, paint the mud black, call it 'road surface'",
-        commission: 0, anger: 4,
-        reaction: `The convoy passed at 60 km/h. Nobody noticed.\n\nThe German minister's blog post: "Impressive pace of development in Bengaluru." He did not get out of the car.\n\n🇩🇪 Crisis averted. The mud will last until Thursday evening.`
-      },
-      {
-        label: "Put barricades around it and label it 'Heritage Infrastructure Art Installation'",
-        commission: 8, anger: -2,
-        reaction: `A local art collective enthusiastically endorsed this. A Bengaluru startup offered to build an app around it.\n\nVogue India called it "post-colonial urban expression."\n\n🎨 You've accidentally created culture. Commission from the barricade supplier: secured.`
-      },
-      {
-        label: "Re-route the VIP convoy through Whitefield instead",
-        commission: 0, anger: -4,
-        reaction: `The convoy hit a 2-hour traffic jam on Whitefield Main Road.\n\nThe German minister's blog post: "I sat in traffic for 2 hours and watched 4 JCBs dig a road with no visible purpose. Faszinierend."\n\n🚦 An honest experience of Bengaluru. Respect.`
-      },
-    ]
-  },
-  {
-    tab: "File No. 6 / Elections",
-    title: "Elections Incoming",
-    body: `The Chief Minister's office has called. The Karnataka state elections are in 6 weeks. The CM wants MG Road "done" before the campaign rally.\n\n"Done" meaning: looks done. From a distance. Preferably at dusk.`,
-    flavor: `This project was supposed to finish in 3 months. It has been 2 years.`,
-    choices: [
-      {
-        label: "Hire 400 workers, run 24-hour shifts — actually finish the road",
-        commission: -22, anger: -8,
-        reaction: `The road is done. It is actually good. Citizens are confused.\n\nUnexpected side effect: people are asking why all roads can't be done this way. You've accidentally raised expectations.\n\n😬 Your commission took a hit, but your performance review will be immaculate.`
-      },
-      {
-        label: "Lay 2 inches of tar on top of the open trench and call it 'Phase 1 Complete'",
-        commission: 18, anger: 10,
-        reaction: `It looks like a road. For now.\n\nThe tar will crack in 3 weeks. But the election will be in 6 weeks, so: fine. The next government can deal with it.\n\n✅ Phase 1: COMPLETE (officially). Phase 2 budget: already being drafted.`
-      },
-      {
-        label: "Inaugurate the 'work in progress' with a ribbon-cutting ceremony",
-        commission: 0, anger: 14,
-        reaction: `You cut a ribbon over an open trench.\n\nThe CM smiled for photos. You smiled for photos. A JCB was decorated with marigolds.\n\nCitizens uploaded videos. It became a meme template within the hour.\n\n🎀 Trend: #RibbonOnTheTrench`
-      },
-    ]
-  },
-  {
-    tab: "File No. 7 / Audit",
-    title: "The CAG Cometh",
-    body: `The Comptroller and Auditor General has requested the MG Road project file: all expenditure records, contractor agreements, and progress reports.\n\nYour office has 48 hours to respond.`,
-    flavor: `File reference: MR/BBMP/2021/0047-A. Last known location: unknown.`,
-    choices: [
-      {
-        label: "The file was 'lost in the 2019 floods'",
-        commission: 0, anger: 5,
-        reaction: `"The 2019 floods caused extensive damage to government records across 14 departments."\n\nThe CAG notes that 2019 was a relatively dry year in Bengaluru. However, they cannot prove the file wasn't flooded.\n\n📁 Investigation: suspended pending further evidence.`
-      },
-      {
-        label: "Create a new file backdated to 2021 — everything looks clean",
-        commission: 0, anger: 2,
-        reaction: `The file is immaculate. Signed by officers who were on leave that week. Witnessed by a stamp that stopped being used in 2020.\n\nThe CAG team is junior. They flag it. Their manager tells them not to make a big deal.\n\n📋 Submitted. Accepted. Noted.`
-      },
-      {
-        label: "Transfer the auditor to the Fisheries Department, Mangaluru",
-        commission: 0, anger: 6,
-        reaction: `You cannot transfer a CAG officer.\n\nHowever, his reporting manager received a call. The audit has been "deprioritised" in favour of a larger highways project.\n\n🐟 The auditor is now looking at fish subsidies. He seems happier.`
-      },
-    ]
-  },
-  {
-    tab: "File No. 8 / Complete",
-    title: "Project 'Complete'",
-    body: `MG Road is — by all official metrics — done.\n\nOriginal budget: ₹47 crore. Final bill: ₹138 crore. Original timeline: 3 months. Actual duration: 4 years, 2 months.\n\nWhat is your final act as project minister?`,
-    flavor: `The road surface has the consistency of paratha. Smooth on top, questionable underneath.`,
-    choices: [
-      {
-        label: "Announce Phase 2: 'Water pipe replacement below the new road'",
-        commission: 32, anger: 16,
-        reaction: `The Phase 2 file was pre-drafted in 2022.\n\nWork begins Monday. The same crew. The same contractor. A new file number.\n\n♻️ The circle of life. MG Road will be dug again. It was always going to be dug again.`
-      },
-      {
-        label: "Announce Road Widening: 'MG Road to become a 6-lane corridor'",
-        commission: 28, anger: 12,
-        reaction: `"Bengaluru's Future Is Wide," reads your press release.\n\nA row of 60-year-old rain trees will need to be cut. An environmental clearance will take 3 weeks — or 3 days with the right approvals.\n\n🌳 Trees: outvoted. Commission: incoming.`
-      },
-      {
-        label: "Take a selfie with the road and post it: 'Namma MG Road, done!'",
-        commission: 0, anger: -5,
-        reaction: `17,000 likes in 4 hours. The Chief Minister retweeted it.\n\nSomeone in the comments pointed out the road is already cracking near the median. You've muted that account.\n\n📱 The selfie has become your profile picture. Legacy secured.`
-      },
-    ]
+    id: 'petition', icon: '📝', label: 'Online Petition', tag: 'civic',
+    progress: 2, chaos: 0, cooldown: 20,
+    result: '22,000 signatures collected. Minister called it "inspiring" in a tweet. Work on the project: unchanged.',
   },
 ];
 
-// ── RATINGS ──
-function getRating(commission, anger) {
-  const score = commission - anger * 0.5;
-  if (score >= 80) return { title: "Legend of Loot 👑", sub: "You are a generational talent in public mismanagement. Statues will be built. Then torn down. Then rebuilt." };
-  if (score >= 50) return { title: "Namma Minister ⭐", sub: "Competently corrupt. The voters respect the hustle. You will win the next election." };
-  if (score >= 20) return { title: "Amateur Hour 📋", sub: "You took some commission but also felt guilty. This is Bengaluru public service — there is no room for guilt." };
-  if (score >= 0)  return { title: "Accidental Idealist 😮", sub: "You tried to do the right thing. The road is mostly built. Nobody knows what to do with you." };
-  return { title: "Transferred to Gulbarga 🚌", sub: "You have been transferred. The new minister has already started Phase 2." };
+const CHAOS_ACTIONS = [
+  {
+    id: 'bribe', icon: '💼', label: 'Bribe the Minister', tag: 'chaos',
+    progress: 12, chaos: 15, cooldown: 60,
+    result: 'Briefcase delivered. Project suddenly has a "fast-track clearance". Just kidding — it\'s still 3 years late. But the file moved from Floor 3 to Floor 4.',
+  },
+  {
+    id: 'blame', icon: '👉', label: 'Blame Congress (1994)', tag: 'chaos',
+    progress: 5, chaos: 3, cooldown: 25,
+    result: '"The substandard pipes laid by the 1994 government are the root cause of all present suffering." Press conference: 40 mins. Questions: 0.',
+  },
+  {
+    id: 'foreigner', icon: '🌍', label: 'Invite a Foreigner', tag: 'chaos',
+    progress: 8, chaos: 2, cooldown: 40,
+    result: 'A German travel blogger posted about the pothole. BBMP sent 12 workers next morning. Road patched in 4 hours. A personal record.',
+  },
+  {
+    id: 'tweet', icon: '🐦', label: 'Tweet Angrily', tag: 'chaos',
+    progress: 1, chaos: 3, cooldown: 15,
+    result: 'Thread went viral. 14,000 retweets. Minister replied "we are working on it 🙏". Work did not begin. You gained 200 followers.',
+  },
+  {
+    id: 'photoop', icon: '📸', label: 'Bring CM for Photo-op', tag: 'chaos',
+    progress: 10, chaos: 10, cooldown: 60,
+    result: 'CM visited the site. 200 workers appeared. 3 JCBs arrived. CM left. Workers left. JCBs left. The site looks exactly the same.',
+  },
+  {
+    id: 'partner', icon: '🤝', label: 'Private Partnership', tag: 'chaos',
+    progress: 15, chaos: 20, cooldown: 75,
+    result: 'TechCorp Bengaluru has agreed to co-fund the project. It will now be renamed "TechCorp Namma Infrastructure™". 4 trees cut. 1 park gone. 1 startup founded.',
+  },
+];
+
+const STALL_EVENTS = [
+  {
+    id: 'cm_transfer', title: 'New Chief Minister!',
+    tag: '🏛️ GOVERNANCE UPDATE',
+    body: 'The Chief Minister has been changed. New leader, new vision, new priorities. All ongoing projects are now "under strategic review".',
+    impact: '📉 All projects set back 20%. Review will take 2 years.',
+    affects: 'all', penalty: 20, chaos: 18,
+    btns: [
+      { label: '😶 Accept your fate', reply: 'You nod. This is the 4th CM since the Metro was announced.' },
+      { label: '📝 File a complaint', reply: 'Complaint filed. Reference: CM/2024/00412. No further action.' },
+    ],
+  },
+  {
+    id: 'monsoon', title: 'Monsoon Has Entered the Chat',
+    tag: '🌧️ WEATHER EVENT',
+    body: 'It is June. The Silk Board dig is now a lake. Two Activas have sunk. The BBMP work crew has not been seen since May 31st. A man is rowing a boat.',
+    impact: '📉 Road progress -15%. Workers on leave until September.',
+    affects: 'road', penalty: 15, chaos: 10,
+    btns: [
+      { label: '🚣 Book a boat', reply: 'You book a coracle. The commute is actually faster than peak hour.' },
+      { label: '🐦 Tweet about it', reply: '+1 retweet. You feel briefly heard.' },
+    ],
+  },
+  {
+    id: 'elections', title: 'Elections in 6 Weeks!',
+    tag: '🗳️ POLITICAL EVENT',
+    body: 'Sudden activity! 400 workers appear. JCBs work through the night. The project is 20% completed in one week. Then: elections happened.',
+    impact: '📉 Progress spike then -30%. Post-election: all workers vanished.',
+    affects: 'random', penalty: 10, chaos: 12,
+    btns: [
+      { label: '🎀 Attend inauguration', reply: 'You cut a ribbon over an open trench. A JCB is decorated with marigolds.' },
+      { label: '🤦 Go home', reply: 'Wise.' },
+    ],
+  },
+  {
+    id: 'g20', title: 'G20 Delegation Arriving',
+    tag: '🌐 INTERNATIONAL EVENT',
+    body: 'A foreign delegation will drive past the project site on Thursday. The site is currently a 300-metre open trench with one abandoned cement mixer.',
+    impact: '📉 Metro -5%. Trench filled with painted cardboard. Looked fine from the car.',
+    affects: 'metro', penalty: 5, chaos: 5,
+    btns: [
+      { label: '🇩🇪 Wave at Germans', reply: 'The German infrastructure minister\'s blog: "Impressive development pace." He did not exit the vehicle.' },
+      { label: '🎨 Call it art', reply: 'A local collective called it "post-colonial infrastructure expression". Vogue India agreed.' },
+    ],
+  },
+  {
+    id: 'no_trains', title: 'Government Forgot to Order Trains',
+    tag: '🚇 METRO CRISIS',
+    body: 'The metro stations are built. The tracks are laid. The budget is exhausted. The trains were never ordered. "Procurement process to begin shortly."',
+    impact: '📉 Metro -25%. "Shortly" means 3 years.',
+    affects: 'metro', penalty: 25, chaos: 15,
+    btns: [
+      { label: '🚶 Walk the tracks', reply: 'You walk the empty metro tracks. It is strangely peaceful.' },
+      { label: '😤 RTI this', reply: 'RTI filed on train procurement. File: unavailable.' },
+    ],
+  },
+  {
+    id: 'inauguration', title: 'Minister Unavailable',
+    tag: '📅 SCHEDULING CONFLICT',
+    body: 'The metro station is complete, trains are ready, passengers are waiting. The Minister is unavailable for the ribbon-cutting. Opening: postponed.',
+    impact: '📉 Metro opening delayed. Nobody else can cut the ribbon.',
+    affects: 'metro', penalty: 10, chaos: 8,
+    btns: [
+      { label: '✂️ Cut it yourself', reply: 'You are escorted out by security. The station remains closed.' },
+      { label: '🙏 Wait patiently', reply: 'Minister available in 4 months. New date: TBD.' },
+    ],
+  },
+  {
+    id: 'contractor', title: 'Contractor Has Disappeared',
+    tag: '🔍 MISSING PERSONS',
+    body: 'The primary contractor collected the advance payment two months ago. Their registered office address is a tea shop in Tumkur. Phone switched off.',
+    impact: '📉 Road/Flyover -20%. Re-tender process: 18 months.',
+    affects: 'road', penalty: 20, chaos: 12,
+    btns: [
+      { label: '🍵 Visit the tea shop', reply: 'The tea is excellent. No contractor.' },
+      { label: '🚔 File FIR', reply: 'FIR filed. Case transferred 3 times. Awaiting investigation.' },
+    ],
+  },
+  {
+    id: 'cag', title: 'CAG Audit Requested',
+    tag: '📁 AUDIT ALERT',
+    body: 'The Comptroller and Auditor General has requested all project files, expenditure records, and contractor agreements. Deadline: 48 hours.',
+    impact: '📉 All projects -10%. Files lost in 2019 floods.',
+    affects: 'all', penalty: 10, chaos: 8,
+    btns: [
+      { label: '🌊 Blame the floods', reply: '"The 2019 floods caused extensive damage to 14 departments." IMD data: normal rainfall that year.' },
+      { label: '📋 Create new files', reply: 'New files created, backdated to 2021. Auditor flagged it. Manager said don\'t make a big deal.' },
+    ],
+  },
+  {
+    id: 'outsiders', title: 'Non-Bangaloreans Blamed',
+    tag: '📢 OFFICIAL STATEMENT',
+    body: '"The influx of non-Kannadigas has overloaded our infrastructure beyond designed capacity. The city was not built for this many people." — Official Press Release',
+    impact: '+15 Chaos. Progress: unchanged. City: also not built well.',
+    affects: 'none', penalty: 0, chaos: 15,
+    btns: [
+      { label: '😑 You were born here', reply: 'Irrelevant. The statement stands.' },
+      { label: '🐦 Quote tweet it', reply: 'Going viral. Chaos increases further.' },
+    ],
+  },
+  {
+    id: 'court', title: 'Land Acquisition Stay Order',
+    tag: '⚖️ LEGAL UPDATE',
+    body: '7 families near the airport expansion zone have filed stay orders in the High Court. The case has been listed for first hearing.',
+    impact: '📉 Airport -15%. Next hearing date: 2027.',
+    affects: 'airport', penalty: 15, chaos: 8,
+    btns: [
+      { label: '⚖️ Support families', reply: 'You donate to their legal fund. Court date: still 2027.' },
+      { label: '📰 Alert press', reply: 'Coverage: 1 article, page 7. Airport: still expanding.' },
+    ],
+  },
+];
+
+const TICKER_HEADLINES = [
+  'Metro Phase 4: Still Under Construction Since 2018 ◆',
+  'BBMP Assures Silk Board Will Be Ready "Very Soon" ◆',
+  'Airport T3 Delayed 2 Years Due to "Unforeseen Circumstances" ◆',
+  'Minister: "We Are Committed to World-Class Infrastructure" [File Photo: 2019] ◆',
+  'Hebbal Flyover Study Commissioned for the 3rd Time ◆',
+  'CM Inaugurates Metro Station; Trains Not Yet Ordered ◆',
+  'BBMP Workers Spotted at Dig Site for 4th Consecutive Year ◆',
+  'Contractor Missing; New Tender Process Initiated ◆',
+  'Road Widened; Trees Cut; Petition Filed; Trees Still Gone ◆',
+  'Public Meeting on Infrastructure Attended by 3 Officials (1 Sleeping) ◆',
+  'Namma Metro Now Running 47 Minutes Late "Due to Operational Reasons" ◆',
+  'Smart City Project Announced; Previous Smart City Project: Ongoing ◆',
+];
+
+// ── STATE ──
+
+let state = {
+  year: 2020, month: 0, chaos: 0, tickCount: 0,
+  activeProject: 'metro',
+  cooldowns: {},
+  eventQueue: [],
+  nextEventTick: 10 + Math.floor(Math.random() * 8),
+  gameOver: false,
+  projects: Object.fromEntries(
+    Object.entries(PROJECTS).map(([k, v]) => [k, { progress: v.progress, status: v.status }])
+  ),
+};
+
+let map, markers = {}, tickInterval;
+
+// ── INIT ──
+
+function init() {
+  renderProjects();
+  renderActions();
+  updateHeader();
+  updateTicker();
+  initMap();
+  tickInterval = setInterval(gameTick, 4000);
 }
 
-// ── UI HELPERS ──
-function setMeter(id, val, valId, suffix) {
-  const pct = Math.min(100, Math.max(0, val));
-  document.getElementById(id).style.width = pct + '%';
-  document.getElementById(valId).textContent = Math.round(val) + suffix;
-}
+function initMap() {
+  try {
+    map = L.map('map', { zoomControl: true, attributionControl: false }).setView([12.9716, 77.5946], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+    }).addTo(map);
 
-function updateMeters() {
-  setMeter('commission-fill', state.commission, 'commission-val', ' cr');
-  setMeter('anger-fill', state.anger, 'anger-val', '%');
-}
+    // fallback detection
+    setTimeout(() => {
+      const tiles = document.querySelectorAll('.leaflet-tile-loaded');
+      if (tiles.length === 0) showFallback();
+    }, 6000);
 
-function buildDots() {
-  const container = document.getElementById('progress-dots');
-  container.innerHTML = '';
-  EVENTS.forEach((_, i) => {
-    const d = document.createElement('div');
-    d.className = 'dot' + (i < state.eventIndex ? ' done' : i === state.eventIndex ? ' active' : '');
-    container.appendChild(d);
-  });
-}
+    Object.entries(PROJECTS).forEach(([key, proj]) => {
+      const el = document.createElement('div');
+      el.className = `map-marker marker-${key}`;
+      el.innerHTML = proj.icon;
+      el.title = proj.name;
+      el.onclick = () => setActiveProject(key);
 
-// ── SCREENS ──
-function renderIntro() {
-  state.eventIndex = -1;
-  document.getElementById('progress-dots').innerHTML = EVENTS.map(() => `<div class="dot"></div>`).join('');
-  document.getElementById('card-area').innerHTML = `
-    <div class="file-card intro-screen">
-      <div class="folder-tab">CONFIDENTIAL</div>
-      <div class="letterhead">
-        <div class="dept">Government of Karnataka &nbsp;·&nbsp; Roads &amp; Infrastructure Division</div>
-        <div class="doc-title">APPOINTMENT ORDER</div>
-        <div class="dept">Ref: RID/MR/2024/MINISTER/001</div>
-      </div>
-      <div class="letter-body">
-        <p>Congratulations, <strong>Sri. You</strong>.</p>
-        <p>You have been appointed as the <strong>Special Project Minister for MG Road Restoration, Phase 7</strong>.</p>
-        <p>The road was last dug in 2021 for fibre optic cables. In 2022 for water pipes. In 2023 for a Metro utility shift. It is now <strong>your turn</strong>.</p>
-        <p>Budget sanctioned: <strong>₹47 crore</strong>.<br>
-        Timeline: <strong>3 months</strong>.<br>
-        Actual expected duration: however long it takes you to retire.</p>
-        <p class="ref">Note: This appointment is subject to the discretion of the Chief Minister, the coalition government, the monsoon, and contractor availability.</p>
-        <p>Best of luck, Minister. <em>Bengaluru is watching.</em><br>(Not really. They're stuck in traffic.)</p>
-      </div>
-      <button class="start-btn" onclick="startGame()">📂 OPEN PROJECT FILE</button>
-    </div>`;
-}
-
-function renderEvent(idx) {
-  state.eventIndex = idx;
-  buildDots();
-  const ev = EVENTS[idx];
-  document.getElementById('card-area').innerHTML = `
-    <div class="file-card">
-      <div class="folder-tab">${ev.tab}</div>
-      <div class="event-num">Event ${idx + 1} of ${EVENTS.length}</div>
-      <h2>${ev.title}</h2>
-      <div class="event-body">${ev.body.replace(/\n/g, '<br>')}<div class="flavor">${ev.flavor}</div></div>
-      <div class="choices">
-        ${ev.choices.map((c, ci) => `
-          <button class="choice-btn" onclick="choose(${idx}, ${ci})">
-            <span class="choice-label">Option ${String.fromCharCode(65+ci)}</span>
-            ${c.label}
-          </button>`).join('')}
-      </div>
-      <div class="reaction-toast" id="reaction-toast"></div>
-    </div>`;
-}
-
-function choose(eventIdx, choiceIdx) {
-  if (state.awaitingNext) return;
-  state.awaitingNext = true;
-
-  const choice = EVENTS[eventIdx].choices[choiceIdx];
-  state.commission = Math.min(100, Math.max(0, state.commission + choice.commission));
-  state.anger = Math.min(100, Math.max(0, state.anger + choice.anger));
-  updateMeters();
-
-  // disable buttons
-  document.querySelectorAll('.choice-btn').forEach(b => {
-    b.style.opacity = '0.4'; b.style.pointerEvents = 'none';
-  });
-
-  const toast = document.getElementById('reaction-toast');
-  toast.innerHTML = choice.reaction.replace(/\n/g, '<br>') +
-    `<br><br><button class="next-btn" onclick="nextEvent()">
-      ${eventIdx < EVENTS.length - 1 ? 'Next →' : 'See Results →'}
-    </button>`;
-  toast.classList.add('show');
-}
-
-function nextEvent() {
-  state.awaitingNext = false;
-  if (state.eventIndex < EVENTS.length - 1) {
-    renderEvent(state.eventIndex + 1);
-  } else {
-    renderOutcome();
+      const icon = L.divIcon({ html: el, className: '', iconSize: [36, 36], iconAnchor: [18, 18] });
+      const marker = L.marker([proj.lat, proj.lng], { icon }).addTo(map);
+      markers[key] = { marker, el };
+    });
+  } catch (e) {
+    showFallback();
   }
 }
 
-function renderOutcome() {
-  const rating = getRating(state.commission, state.anger);
-  const shareText = `I played Road Dig Madthini and earned ₹${Math.round(state.commission)} cr commission with ${Math.round(state.anger)}% public anger. Rating: ${rating.title}. Namma Bengaluru! 🚧`;
-
-  document.getElementById('progress-dots').innerHTML = EVENTS.map(() => `<div class="dot done"></div>`).join('');
-  document.getElementById('card-area').innerHTML = `
-    <div class="file-card outcome-screen">
-      <div class="folder-tab">Project File — CLOSED</div>
-      <div class="cert-title">Government of Karnataka &nbsp;·&nbsp; Official Project Record</div>
-      <h2>MG Road Phase 7<br>"Complete"</h2>
-      <div class="big-stamp">APPROVED</div>
-      <div class="cert-border">
-        <div class="stat-row"><span class="stat-label">Original Budget</span><span class="stat-val">₹47 crore</span></div>
-        <div class="stat-row"><span class="stat-label">Final Expenditure</span><span class="stat-val">₹138 crore</span></div>
-        <div class="stat-row"><span class="stat-label">Your Commission</span><span class="stat-val">₹${Math.round(state.commission)} cr</span></div>
-        <div class="stat-row"><span class="stat-label">Public Anger Level</span><span class="stat-val">${Math.round(state.anger)}%</span></div>
-        <div class="stat-row"><span class="stat-label">Planned Duration</span><span class="stat-val">3 months</span></div>
-        <div class="stat-row"><span class="stat-label">Actual Duration</span><span class="stat-val">4 years, 2 months</span></div>
-        <div class="stat-row"><span class="stat-label">Trees Cut</span><span class="stat-val">Several</span></div>
-        <div class="stat-row"><span class="stat-label">Complaints Resolved</span><span class="stat-val">0</span></div>
-      </div>
-      <div class="rating-box">${rating.title}</div>
-      <div class="rating-sub">${rating.sub}</div>
-      <div>
-        <button class="share-btn" onclick="shareResult('${encodeURIComponent(shareText)}')">📤 Share on Twitter</button>
-        <button class="share-btn" onclick="copyResult('${encodeURIComponent(shareText)}')">📋 Copy Result</button>
-        <button class="replay-btn" onclick="startGame()">🔄 Play Again</button>
-      </div>
-      <p style="font-size:11px; color:#8a7f70; margin-top:24px; font-family:'Courier Prime',monospace;">
-        Phase 8 has already been approved.<br>
-        Dig begins Monday.
-      </p>
-    </div>`;
+function showFallback() {
+  document.getElementById('map').style.display = 'none';
+  const fb = document.getElementById('map-fallback');
+  fb.style.display = 'flex';
 }
 
-// ── SHARE ──
-function shareResult(encodedText) {
-  window.open('https://twitter.com/intent/tweet?text=' + encodedText, '_blank');
-}
-function copyResult(encodedText) {
-  navigator.clipboard.writeText(decodeURIComponent(encodedText)).then(() => {
-    alert('Result copied! Share it anywhere.');
+// ── RENDER ──
+
+function renderProjects() {
+  const list = document.getElementById('project-list');
+  list.innerHTML = '';
+  Object.entries(PROJECTS).forEach(([key, proj]) => {
+    const ps = state.projects[key];
+    const active = state.activeProject === key;
+    const row = document.createElement('div');
+    row.className = `project-row${active ? ' active' : ''}`;
+    row.id = `proj-row-${key}`;
+    row.onclick = () => setActiveProject(key);
+    row.innerHTML = `
+      <div class="project-icon">${proj.icon}</div>
+      <div class="project-info">
+        <div class="project-name">${proj.name}</div>
+        <div class="project-status" id="proj-status-${key}">${ps.status}</div>
+        <div class="proj-bar-bg">
+          <div class="proj-bar-fill" id="proj-bar-${key}" style="width:${ps.progress}%;background:${proj.color}"></div>
+        </div>
+      </div>
+      <div class="proj-pct" id="proj-pct-${key}">${Math.round(ps.progress)}%</div>`;
+    list.appendChild(row);
   });
 }
 
-// ── START ──
-function startGame() {
-  state = { commission: 0, anger: 0, eventIndex: -1, awaitingNext: false };
-  updateMeters();
-  renderEvent(0);
+function updateProjectUI(key) {
+  const ps = state.projects[key];
+  const proj = PROJECTS[key];
+  const bar = document.getElementById(`proj-bar-${key}`);
+  const pct = document.getElementById(`proj-pct-${key}`);
+  const stat = document.getElementById(`proj-status-${key}`);
+  if (bar) bar.style.width = Math.max(0, ps.progress) + '%';
+  if (pct) pct.textContent = Math.max(0, Math.round(ps.progress)) + '%';
+  if (stat) stat.textContent = ps.status;
 }
 
-// ── INIT ──
-updateMeters();
-renderIntro();
+function setActiveProject(key) {
+  state.activeProject = key;
+  document.querySelectorAll('.project-row').forEach(r => r.classList.remove('active'));
+  const row = document.getElementById(`proj-row-${key}`);
+  if (row) row.classList.add('active');
+}
+
+function renderActions() {
+  renderActionGroup('civic-actions', CIVIC_ACTIONS);
+  renderActionGroup('chaos-actions', CHAOS_ACTIONS);
+}
+
+function renderActionGroup(containerId, actions) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  actions.forEach(action => {
+    const btn = document.createElement('button');
+    btn.className = 'action-btn';
+    btn.id = `action-${action.id}`;
+    btn.innerHTML = `
+      <span class="btn-icon">${action.icon}</span>
+      <span class="btn-text">${action.label}</span>
+      <span class="btn-tag ${action.tag === 'civic' ? 'tag-civic' : 'tag-chaos'}">${action.tag === 'civic' ? 'civic' : '⚡ chaos'}</span>
+      <div class="cooldown-bar" id="cd-bar-${action.id}" style="width:0%"></div>`;
+    btn.onclick = () => doAction(action);
+    container.appendChild(btn);
+  });
+}
+
+function updateHeader() {
+  document.getElementById('year-val').textContent = state.year;
+  document.getElementById('months-val').textContent = state.month + (state.year - 2020) * 12;
+  document.getElementById('chaos-val').textContent = Math.round(state.chaos) + '%';
+  document.getElementById('chaos-fill').style.width = state.chaos + '%';
+}
+
+function updateTicker(extra) {
+  const headlines = extra ? [extra, ...TICKER_HEADLINES] : TICKER_HEADLINES;
+  document.getElementById('ticker-text').textContent = headlines.join('   ');
+}
+
+// ── GAME TICK ──
+
+function gameTick() {
+  if (state.gameOver) return;
+  state.tickCount++;
+  state.month++;
+  if (state.month >= 12) { state.month = 0; state.year++; }
+
+  // progress creep
+  Object.keys(state.projects).forEach(key => {
+    const ps = state.projects[key];
+    ps.progress = Math.min(99, ps.progress + 0.8 + Math.random() * 0.8);
+    updateProjectUI(key);
+  });
+
+  // random stall event
+  if (state.tickCount >= state.nextEventTick) {
+    fireRandomEvent();
+    state.nextEventTick = state.tickCount + 10 + Math.floor(Math.random() * 8);
+  }
+
+  updateHeader();
+}
+
+// ── ACTIONS ──
+
+function doAction(action) {
+  if (state.cooldowns[action.id]) return;
+  if (state.gameOver) return;
+
+  const key = state.activeProject;
+  const ps = state.projects[key];
+  ps.progress = Math.min(99, ps.progress + action.progress);
+  state.chaos = Math.min(100, state.chaos + action.chaos);
+  updateProjectUI(key);
+  updateHeader();
+  showToast(action.result);
+  startCooldown(action);
+
+  if (state.chaos >= 100) triggerGameOver();
+}
+
+function startCooldown(action) {
+  state.cooldowns[action.id] = true;
+  const btn = document.getElementById(`action-${action.id}`);
+  const bar = document.getElementById(`cd-bar-${action.id}`);
+  if (btn) btn.disabled = true;
+  if (bar) {
+    bar.style.transition = 'none';
+    bar.style.width = '100%';
+    setTimeout(() => {
+      bar.style.transition = `width ${action.cooldown}s linear`;
+      bar.style.width = '0%';
+    }, 50);
+  }
+  setTimeout(() => {
+    state.cooldowns[action.id] = false;
+    if (btn) btn.disabled = false;
+  }, action.cooldown * 1000);
+}
+
+// ── EVENTS ──
+
+function fireRandomEvent() {
+  const ev = STALL_EVENTS[Math.floor(Math.random() * STALL_EVENTS.length)];
+  showEventModal(ev);
+}
+
+function applyEventEffect(ev) {
+  const keys = ev.affects === 'all' ? Object.keys(state.projects)
+    : ev.affects === 'none' ? []
+    : ev.affects === 'random' ? [Object.keys(state.projects)[Math.floor(Math.random() * 4)]]
+    : [ev.affects];
+
+  keys.forEach(key => {
+    if (state.projects[key]) {
+      state.projects[key].progress = Math.max(0, state.projects[key].progress - ev.penalty);
+      updateProjectUI(key);
+      pulseMarker(key);
+    }
+  });
+
+  state.chaos = Math.min(100, state.chaos + ev.chaos);
+  updateHeader();
+  updateTicker(ev.title + ' — ' + ev.body.slice(0, 80) + '... ◆');
+
+  if (state.chaos >= 100) setTimeout(triggerGameOver, 1500);
+}
+
+function pulseMarker(key) {
+  const m = markers[key];
+  if (!m) return;
+  m.el.classList.remove('pulse');
+  void m.el.offsetWidth;
+  m.el.classList.add('pulse');
+}
+
+function showEventModal(ev) {
+  document.getElementById('modal-tag').textContent = ev.tag;
+  document.getElementById('modal-title').textContent = ev.title;
+  document.getElementById('modal-body').textContent = ev.body;
+  document.getElementById('modal-impact').textContent = ev.impact;
+
+  const btnsEl = document.getElementById('modal-btns');
+  btnsEl.innerHTML = '';
+  ev.btns.forEach((btn, i) => {
+    const b = document.createElement('button');
+    b.className = `modal-btn${i === 0 ? ' primary' : ''}`;
+    b.textContent = btn.label;
+    b.onclick = () => {
+      showToast(btn.reply);
+      closeModal();
+    };
+    btnsEl.appendChild(b);
+  });
+
+  applyEventEffect(ev);
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+
+// ── TOAST ──
+
+let toastTimer;
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 5000);
+}
+
+// ── GAME OVER ──
+
+function triggerGameOver() {
+  if (state.gameOver) return;
+  state.gameOver = true;
+  clearInterval(tickInterval);
+
+  const stats = document.getElementById('gameover-stats');
+  const yearsWasted = state.year - 2020 + Math.round(state.month / 12 * 10) / 10;
+  stats.innerHTML = `
+    <div class="go-stat"><span class="go-label">Years wasted</span><span class="go-val">${yearsWasted}</span></div>
+    <div class="go-stat"><span class="go-label">Metro progress</span><span class="go-val">${Math.round(state.projects.metro.progress)}%</span></div>
+    <div class="go-stat"><span class="go-label">Road progress</span><span class="go-val">${Math.round(state.projects.road.progress)}%</span></div>
+    <div class="go-stat"><span class="go-label">Flyover progress</span><span class="go-val">${Math.round(state.projects.flyover.progress)}%</span></div>
+    <div class="go-stat"><span class="go-label">Airport progress</span><span class="go-val">${Math.round(state.projects.airport.progress)}%</span></div>
+    <div class="go-stat"><span class="go-label">Projects completed</span><span class="go-val">0</span></div>`;
+
+  document.getElementById('gameover-overlay').classList.add('show');
+}
+
+function copyShareCard() {
+  const yearsWasted = state.year - 2020 + Math.round(state.month / 12 * 10) / 10;
+  const text = `I tried to fix Bengaluru for ${yearsWasted} years. Chaos hit 100%. Metro: ${Math.round(state.projects.metro.progress)}% complete. Namma city 💔\n\nPlay: Namma Bengaluru — The Infinite City`;
+  navigator.clipboard.writeText(text).then(() => showToast('Share card copied! Paste anywhere.'));
+}
+
+function restartGame() {
+  location.reload();
+}
+
+// ── START ──
+init();
 </script>
 </body>
 </html>
